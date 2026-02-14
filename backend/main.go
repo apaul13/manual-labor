@@ -47,6 +47,7 @@ func main() {
 
 	router := gin.Default()
 	router.GET("/cars", getCars)
+	router.POST("/cars", postCars)
 
 	router.Run("localhost:8080")
 }
@@ -71,6 +72,24 @@ func getCars(c *gin.Context) {
 		cars = append(cars, car)
 	}
 	c.IndentedJSON(http.StatusOK, cars)
+}
+
+func postCars(c *gin.Context) {
+	var newCar Car
+	if err := c.BindJSON(&newCar); err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	result, err := db.Exec(context.Background(), "INSERT INTO car (make, model, year, trim) VALUES ($1, $2, $3, $4)", newCar.Make, newCar.Model, newCar.Year, newCar.Trim)
+
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if result.Insert() {
+		c.IndentedJSON(http.StatusCreated, newCar)
+	}
 }
 
 func carsByMake(make string) ([]Car, error) {
