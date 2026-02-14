@@ -1,7 +1,7 @@
-create table car (
-	id INT PRIMARY KEY,
+CREATE TABLE car (
+	id SERIAL PRIMARY KEY,
 	make VARCHAR(50) NOT NULL,
 	model VARCHAR(50) NOT NULL,
-	year VARCHAR(4) not NULL,
+	year VARCHAR(4) NOT NULL,
 	trim VARCHAR(50) NULL
 )

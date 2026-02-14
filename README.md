@@ -38,3 +38,8 @@ db/
   init/
     *.sql
 ```
+
+# Go get
+go get github.com/joho/godotenv
+go get github.com/jackc/pgx/v5
+go get github.com/gin-gonic/gin
