@@ -15,12 +15,13 @@ type Car struct {
 	make  string
 	model string
 	year  string
+	trim  string
 }
 
 var db *sql.DB
 
 func main() {
-	db, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
+	db, err := pgx.Connect(context.Background(), os.Getenv("DB_URL"))
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
