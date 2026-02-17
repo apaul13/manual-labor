@@ -1,15 +1,26 @@
 #root {
-  max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
   text-align: center;
+}
+
+header {
+  /* light orange background */
+  background-color: #ffe6a0;
+  padding: 1rem;
+  margin-bottom: 2rem;
+}
+
+main {
+  max-width: 1200px;
+  margin: auto;
 }
 
 .navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-inline: auto;
+  max-width: 1200px;
 }
 
 .navbar a {
@@ -21,15 +32,133 @@
 .nav-logo {
   font-size: 2rem;
   font-weight: 700;
-  transition: transform 0.2s ease-in-out, filter 0.2s ease-in-out;
+  transition: transform 0.2s ease-in-out;
 }
 
 .nav-logo:hover {
   transform: scale(1.05);
-  filter: drop-shadow(0 0 5px rgba(0, 0, 255, 0.2));
 }
 
 .nav-links {
   display: flex;
   gap: 1rem;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.2s ease-in-out;
+}
+
+.nav-link:hover {
+  text-decoration: underline;
+}
+
+select {
+  border: 1px solid #cccccc;
+  background: white;
+  padding: 10px;
+  border-radius: 4px;
+  transition: 0.2s;
+  font-family: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+select:hover,
+select:focus {
+  border-color: #999999;
+  outline: none;
+}
+
+select {
+  appearance: none;
+}
+
+.label-category-select {
+  font-weight: bold;
+  font-size: 1.25em;
+}
+
+.vehicle-identification {
+  margin: auto;
+  display: flex;
+  flex-direction: row;
+  max-width: 1000px;
+  border-radius: 12px;
+  border: 1px solid #dddddd;
+  overflow: hidden;
+}
+
+.search-options {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.search-option {
+  padding: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.search-option:nth-child(2) label {
+  font-size: 0.9em;
+  margin-right: 8px;
+  margin-bottom: 4px;
+}
+
+.search-option label {
+  margin-right: 8px;
+}
+
+.search-option .input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #cccccc;
+  border-radius: 4px;
+}
+
+.search-option .input.vin {
+  flex-grow: 1;
+}
+
+.horizontal-divider {
+  width: 100%;
+  display: flex;
+}
+
+.horizontal-divider .input {
+  width: 100px;
+  flex: 0;
+}
+
+.search-box {
+  width: 240px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-left: 1px solid #dddddd;
+}
+
+.search-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 1em;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-button:hover {
+  background-color: #0056b3;
+}
+
+.search-option:not(:last-child) {
+  border-bottom: 1px solid #dddddd;
 }
