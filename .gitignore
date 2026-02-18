@@ -140,3 +140,4 @@ vite.config.ts.timestamp-*
 
 backend/manual-labor
 .DS_Store
+curlCommands.*
