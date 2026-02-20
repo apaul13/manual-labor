@@ -38,6 +38,19 @@ db/
   init/
     *.sql
 ```
+## Run backend
+1. Install Go
+2. cd into backend folder
+3. Run the go get commands below
+4. ```
+go run backend/main.go
+```
+or
+```
+cd backend
+go run main.go
+```
+
 
 # Go get
 - go get github.com/joho/godotenv

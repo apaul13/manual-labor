@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -47,16 +48,16 @@ func main() {
 	fmt.Printf("Cars found: %v\n", cars)
 
 	router := gin.Default()
-	router.Use(cors.Default()) // Allows all origins
+	// router.Use(cors.Default()) // Allows all origins
 
-	// config := cors.DefaultConfig()
-	// config.AllowOrigins = []string{"http://localhost.com"}
-	// config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
-	// config.AllowHeaders = []string{"Origin", "Content-Type", "Authorization"}
-	// config.AllowCredentials = true
-	// config.MaxAge = 12 * time.Hour
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{"http://localhost:5173"}
+	config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
+	config.AllowHeaders = []string{"Origin", "Content-Type", "Authorization"}
+	config.AllowCredentials = true
+	config.MaxAge = 12 * time.Hour
 
-	// router.Use(cors.New(config))
+	router.Use(cors.New(config))
 
 	router.GET("/cars", getCars)
 	router.POST("/cars", postCars)
