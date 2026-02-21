@@ -2,6 +2,7 @@ package cars
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/apaul13/manual-labor/database"
 	"github.com/gin-gonic/gin"
@@ -66,7 +67,7 @@ func PostCars(c *gin.Context) {
 	}
 
 	q := psql.Insert(im.Into("car", "make", "model", "year", "trim"),
-		im.Values(psql.Arg(newCar.Make), psql.Arg(newCar.Model), psql.Arg(newCar.Year), psql.Arg(newCar.Trim)))
+		im.Values(psql.Arg(strings.ToUpper(newCar.Make)), psql.Arg(strings.ToUpper(newCar.Model)), psql.Arg(strings.ToUpper(newCar.Year)), psql.Arg(strings.ToUpper(newCar.Trim))))
 
 	result, err := bob.Exec(c, db, q)
 
