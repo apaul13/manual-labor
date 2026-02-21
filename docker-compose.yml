@@ -12,6 +12,18 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql
       - ./db/init:/docker-entrypoint-initdb.d
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: dockerfile.dev
+    container_name: manual_labor_frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    restart: unless-stopped
+
 
 volumes:
   postgres_data:
