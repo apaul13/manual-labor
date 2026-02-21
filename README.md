@@ -55,6 +55,8 @@ go run main.go
 # Go get
 - go get github.com/joho/godotenv
 - go get github.com/jackc/pgx/v5
+- go get github.com/jackc/pgx/stdlib
 - go get github.com/jackc/pgx/v5/pgxpool
 - go get github.com/gin-gonic/gin
 - go get github.com/gin-contrib/cors
+- go get github.com/stephenafamo/bob

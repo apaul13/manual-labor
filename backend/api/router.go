@@ -26,3 +26,7 @@ func RunRouter() {
 
 	router.Run("localhost:8080")
 }
+
+func Data() {
+
+}

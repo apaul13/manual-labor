@@ -1,45 +1,57 @@
 package cars
 
 import (
-	"context"
-	"fmt"
 	"net/http"
-	"os"
 
 	"github.com/apaul13/manual-labor/database"
 	"github.com/gin-gonic/gin"
+	"github.com/stephenafamo/bob"
+	"github.com/stephenafamo/bob/dialect/psql"
+	"github.com/stephenafamo/bob/dialect/psql/im"
+	"github.com/stephenafamo/bob/dialect/psql/sm"
+	"github.com/stephenafamo/scan"
 )
 
 type Car struct {
-	ID    int64
+	ID    int64 // `db:",pk"`
 	Make  string
 	Model string
 	Year  string
 	Trim  string
 }
 
+// var carTable = psql.NewTable[any, Car, CarSetter]("public", "car")
+
 func GetCars(c *gin.Context) {
 	db, err := database.GetDbConnection()
 
-	var cars []Car
+	makeStr := c.Query("Make")
+	modelStr := c.Query("model")
+	yearStr := c.Query("year")
+	trimStr := c.Query("trim")
 
-	// var pathParams = c.Params
-	rows, err := db.Query(context.Background(), "SELECT * FROM car")
+	// Incredibly beautiful dynamic query
+	q := psql.Select(sm.From("car"))
+	if len(makeStr) > 0 {
+		q.Apply(sm.Where(psql.Quote("make").In(psql.Arg(makeStr))))
+	}
+	if len(modelStr) > 0 {
+		q.Apply(sm.Where(psql.Quote("model").In(psql.Arg(modelStr))))
+	}
+	if len(yearStr) > 0 {
+		q.Apply(sm.Where(psql.Quote("year").In(psql.Arg(yearStr))))
+	}
+	if len(trimStr) > 0 {
+		q.Apply(sm.Where(psql.Quote("trim").In(psql.Arg(trimStr))))
+	}
+
+	cars, err := bob.All(c, db, q, scan.StructMapper[Car]())
 
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	defer rows.Close()
-	for rows.Next() {
-		var car Car
-		if err := rows.Scan(&car.ID, &car.Make, &car.Model, &car.Year, &car.Trim); err != nil {
-			fmt.Fprintf(os.Stderr, "Scan for car failed: %v\n", err)
-		}
-
-		cars = append(cars, car)
-	}
 	c.IndentedJSON(http.StatusOK, cars)
 }
 
@@ -53,37 +65,26 @@ func PostCars(c *gin.Context) {
 		return
 	}
 
-	result, err := db.Exec(context.Background(), "INSERT INTO car (make, model, year, trim) VALUES ($1, $2, $3, $4)", newCar.Make, newCar.Model, newCar.Year, newCar.Trim)
+	q := psql.Insert(im.Into("car", "make", "model", "year", "trim"),
+		im.Values(psql.Arg(newCar.Make), psql.Arg(newCar.Model), psql.Arg(newCar.Year), psql.Arg(newCar.Trim)))
+
+	result, err := bob.Exec(c, db, q)
 
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	if result.Insert() {
-		c.IndentedJSON(http.StatusCreated, newCar)
-	}
-}
 
-func carsByMake(make string) ([]Car, error) {
-	db, err := database.GetDbConnection()
-
-	var cars []Car
-
-	rows, err := db.Query(context.Background(), "SELECT * FROM car WHERE make = $1", make)
-
+	rowsInserted, err := result.RowsAffected()
 	if err != nil {
-		return nil, fmt.Errorf("carsByMake %q: %v", make, err)
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 
-	defer rows.Close()
-	for rows.Next() {
-		var car Car
-		if err := rows.Scan(&car.ID, &car.Make, &car.Model, &car.Year, &car.Trim); err != nil {
-			return nil, fmt.Errorf("carsByMake %q: %v", make, err)
-		}
-
-		cars = append(cars, car)
+	if rowsInserted > 0 {
+		c.IndentedJSON(http.StatusCreated, newCar)
+	} else {
+		c.IndentedJSON(http.StatusNoContent, "No new cars created.")
 	}
-	return cars, nil
 
 }
