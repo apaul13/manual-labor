@@ -23,10 +23,11 @@ func RunRouter() {
 
 	router.GET("/cars", cars.GetCars)
 	router.POST("/cars", cars.PostCars)
+	router.GET("/health", Health)
 
-	router.Run("localhost:8080")
+	router.Run(":8080")
 }
 
-func Data() {
+func Health(c *gin.Context) {
 
 }

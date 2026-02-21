@@ -12,10 +12,15 @@ import (
 )
 
 func GetDbConnection() (bob.DB, error) {
-	err := godotenv.Load("../.env")
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to load env file: %v\n", err)
-	}
+	// Try to load an env file if present. In Docker we supply env vars via docker-compose
+	// so failure to load is not fatal and will be silently ignored.
+	_ = godotenv.Load("../.env")
+
+	// Original explicit load (kept commented for reference):
+	// err := godotenv.Load("../.env")
+	// if err != nil {
+	// 	fmt.Fprintf(os.Stderr, "Unable to load env file: %v\n", err)
+	// }
 
 	pool, err := pgxpool.New(context.Background(), os.Getenv("DB_URL"))
 	if err != nil {
