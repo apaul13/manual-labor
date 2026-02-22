@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/apaul13/manual-labor/api/cars"
+	"github.com/apaul13/manual-labor/api/middleware"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -21,10 +22,11 @@ func RunRouter() {
 	config.MaxAge = 12 * time.Hour
 
 	router.Use(cors.New(config))
+	router.Use(middleware.ErrorHandler())
 
 	// router.GET("/cars", cars.GetCars)
 	// router.POST("/cars", cars.PostCars)
-	// router.GET("/cars/lookupvin", cars.LookupVIN)
+	router.GET("/cars", cars.LookupVIN)
 	//
 	router.GET("/makes", cars.GetMakes)
 	router.GET("/health", Health)

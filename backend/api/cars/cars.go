@@ -17,9 +17,9 @@ import (
 )
 
 type Make struct {
-	ID      int64
-	Display string
-	Year    string
+	ID   int64
+	Name string
+	Year string
 }
 
 type Car struct {

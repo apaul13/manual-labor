@@ -147,3 +147,5 @@ curlCommands.*
 
 backend/tmp
 backend/pkg
+
+vpic*
