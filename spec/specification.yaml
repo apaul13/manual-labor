@@ -1,0 +1,242 @@
+openapi: 3.0.3
+info:
+  title: Manny API
+  version: 1.0.0
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+security: []
+
+tags:
+  - name: Vehicles
+    description: Endpoints related to vehicles
+
+paths:
+  /makes:
+    get:
+      summary: Get distinct makes
+      description: Returns a list of distinct vehicle makes. Optionally filter by year.
+      operationId: GetMakes
+      tags:
+        - Vehicles
+      parameters:
+        - name: year
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Optional year filter. Returns all makes if omitted.
+      responses:
+        '200':
+          description: A list of makes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Make'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /models:
+    get:
+      summary: Get distinct models
+      description: Returns a list of distinct vehicle models for a given make.
+      operationId: GetModels
+      tags:
+        - Vehicles
+      parameters:
+        - name: makeId
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: The ID of the make.
+      responses:
+        '200':
+          description: A list of models
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Model'
+        '400':
+          description: makeId is required
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /trims:
+    get:
+      summary: Get distinct trims
+      description: Returns a list of distinct trims for a given model.
+      operationId: GetTrims
+      tags:
+        - Vehicles
+      parameters:
+        - name: modelId
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: The ID of the model.
+      responses:
+        '200':
+          description: A list of trims
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Trim'
+        '400':
+          description: modelId is required
+        '404':
+          $ref: '#/components/responses/NotFound'
+  
+  /cars:
+    get:
+      summary: Get cars
+      description: Returns a list of cars matching the search criteria.
+      operationId: GetCars
+      tags:
+        - Vehicles
+      parameters:
+        - name: year
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Optional year filter.
+        - name: makeId
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: The ID of the make.
+        - name: modelId
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: The ID of the model.
+        - name: trimId
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: The ID of the trim.
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Optional search term to match against make/model/trim names.
+      responses:
+        '200':
+          $ref: '#/components/responses/PaginatedCarsResponse'
+        '400':
+          description: trimId is required
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  schemas:
+    Make:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        year:
+          type: string
+      required:
+        - id
+        - name
+
+    Model:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        makeId:
+          type: integer
+      required:
+        - id
+        - name
+        - makeId
+
+    Trim:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        modelId:
+          type: integer
+        manualId:
+          type: integer
+      required:
+        - id
+        - name
+        - modelId
+
+    Cars:
+      type: object
+      properties:
+        year:
+          type: string
+        makeId:
+          type: integer
+        modelId:
+          type: integer
+        trimId:
+          type: integer
+      required:
+        - year
+        - makeId
+        - modelId
+        - trimId
+
+  responses:
+    NotFound:
+      description: The specified resource was not found.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                description: A description of the error.
+    PaginatedCarsResponse:
+      description: A paginated list of cars matching the search criteria.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              items:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cars'
+              page:
+                type: integer
+              pageSize:
+                type: integer
+              totalCount:
+                type: integer
+            required:
+              - items
+              - page
+              - pageSize
+              - totalCount
