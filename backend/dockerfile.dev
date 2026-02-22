@@ -1,0 +1,38 @@
+FROM golang:1.25
+
+# Set module mode and GOPATH
+ENV GO111MODULE=on
+ENV GOPATH=/go
+ENV PATH=$PATH:/go/bin
+
+WORKDIR /app
+
+# Cache dependencies
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Install air for live reload (development only) via the official install script
+# Install curl/ca-certificates if missing, then install air into /go/bin so it is available in PATH
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates && \
+    curl -sSfL https://raw.githubusercontent.com/cosmtrek/air/master/install.sh | sh -s -- -b /go/bin && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create a non-root user for running the app
+RUN useradd -m devuser || true
+
+# Ensure directories exist and are writable by the dev user
+RUN mkdir -p /go/bin /go/pkg /tmp && chown -R devuser:devuser /go /tmp
+
+# Switch to non-root user
+USER devuser
+
+# Copy the rest of the application when building the image is optional for dev;
+# in docker-compose we'll mount the host source directory so mounts override this copy.
+# Keeping this here allows building a dev image that can run without a bind mount.
+COPY --chown=devuser:devuser . /app
+
+EXPOSE 8080
+
+# Default command runs air with a local config file if present.
+# Air will rebuild/restart the app on file changes.
+CMD ["air", "-c", ".air.toml"]

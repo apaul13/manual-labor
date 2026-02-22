@@ -1,6 +1,9 @@
 package cars
 
 import (
+	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
@@ -19,6 +22,13 @@ type Car struct {
 	Model string
 	Year  string
 	Trim  string
+}
+
+type VINLookupCar struct {
+	Make  string `json:"make"`
+	Model string `json:"model"`
+	Year  string `json:"year"`
+	Trim  string `json:"trim"`
 }
 
 // var carTable = psql.NewTable[any, Car, CarSetter]("public", "car")
@@ -88,4 +98,108 @@ func PostCars(c *gin.Context) {
 		c.IndentedJSON(http.StatusNoContent, "No new cars created.")
 	}
 
+}
+
+func LookupVIN(c *gin.Context) {
+	endpoint := "https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/" + c.Query("vin") + "?format=json"
+	if len(c.Query("year")) > 0 {
+		endpoint = endpoint + "&modelyear=" + c.Query("year")
+	}
+
+	fmt.Println("Calling API with endpoint: " + endpoint)
+
+	resp, err := http.Get(endpoint)
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// helper types to unmarshal NHTSA response
+	type resultItem struct {
+		Variable   string `json:"Variable"`
+		VariableId int    `json:"VariableId"`
+		Value      any    `json:"Value"`
+	}
+	var apiResp struct {
+		Count   int          `json:"Count"`
+		Message string       `json:"Message"`
+		Results []resultItem `json:"Results"`
+	}
+
+	if err := json.Unmarshal(body, &apiResp); err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	vinLookupCar := &VINLookupCar{}
+
+	// Convert interface{} Value -> string helper
+	toStr := func(v any) string {
+		if v == nil {
+			return ""
+		}
+		switch t := v.(type) {
+		case string:
+			return strings.TrimSpace(t)
+		case float64:
+			// JSON numbers unmarshal to float64
+			// Format without fractional part if it's an integer
+			if t == float64(int64(t)) {
+				return fmt.Sprintf("%d", int64(t))
+			}
+			return fmt.Sprintf("%v", t)
+		default:
+			// fallback: marshal back to JSON and use that
+			b, _ := json.Marshal(t)
+			return strings.TrimSpace(string(b))
+		}
+	}
+
+	// Map variables
+	for _, r := range apiResp.Results {
+		val := toStr(r.Value)
+		switch r.Variable {
+		case "Make":
+			if vinLookupCar.Make == "" {
+				vinLookupCar.Make = val
+			}
+		case "Model":
+			if vinLookupCar.Model == "" {
+				vinLookupCar.Model = val
+			}
+		case "Trim":
+			if vinLookupCar.Trim == "" {
+				vinLookupCar.Trim = val
+			}
+		case "Model Year", "ModelYear":
+			if vinLookupCar.Year == "" {
+				vinLookupCar.Year = val
+			}
+		// optional: handle other common names / fallback by VariableId
+		case "":
+			// no-op
+		}
+		// fallback by VariableId if needed:
+		if vinLookupCar.Make == "" && r.VariableId == 26 {
+			vinLookupCar.Make = strings.ToUpper(val)
+		}
+		if vinLookupCar.Model == "" && r.VariableId == 28 {
+			vinLookupCar.Model = strings.ToUpper(val)
+		}
+		if vinLookupCar.Year == "" && r.VariableId == 29 {
+			vinLookupCar.Year = strings.ToUpper(val)
+		}
+		if vinLookupCar.Trim == "" && r.VariableId == 38 {
+			vinLookupCar.Trim = strings.ToUpper(val)
+		}
+	}
+
+	c.IndentedJSON(http.StatusOK, vinLookupCar)
 }

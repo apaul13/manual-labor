@@ -24,14 +24,17 @@ services:
       - /app/node_modules
     restart: unless-stopped
   backend:
-    image: golang:1.25
+    build:
+      context: ./backend
+      dockerfile: dockerfile.dev
     container_name: manual_labor_backend
     restart: unless-stopped
     working_dir: /app
     volumes:
       - ./backend:/app
-      - /app/pkg/mod
-    command: sh -c "go run ./"
+      - /go/pkg/mod
+      - /go/bin
+      - /tmp
     ports:
       - "8080:8080"
     depends_on:

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/apaul13/manual-labor/api/cars"
@@ -23,11 +24,12 @@ func RunRouter() {
 
 	router.GET("/cars", cars.GetCars)
 	router.POST("/cars", cars.PostCars)
+	// router.GET("/cars/lookupvin", cars.LookupVIN)
 	router.GET("/health", Health)
 
 	router.Run(":8080")
 }
 
 func Health(c *gin.Context) {
-
+	fmt.Println("YAYYYY!")
 }
