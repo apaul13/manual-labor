@@ -16,6 +16,12 @@ import (
 	"github.com/stephenafamo/scan"
 )
 
+type Make struct {
+	ID      int64
+	Display string
+	Year    string
+}
+
 type Car struct {
 	ID    int64 // `db:",pk"`
 	Make  string
@@ -34,9 +40,13 @@ type VINLookupCar struct {
 // var carTable = psql.NewTable[any, Car, CarSetter]("public", "car")
 
 func GetCars(c *gin.Context) {
-	db, err := database.GetDbConnection()
+	db, err := database.GetDB()
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
-	makeStr := c.Query("Make")
+	makeStr := c.Query("make")
 	modelStr := c.Query("model")
 	yearStr := c.Query("year")
 	trimStr := c.Query("trim")
@@ -66,9 +76,39 @@ func GetCars(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, cars)
 }
 
+func GetMakes(c *gin.Context) {
+	db, err := database.GetDB()
+
+	yearStr := c.Query("year")
+
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	q := psql.Select(sm.From("make"))
+	if len(yearStr) > 0 {
+		q.Apply(sm.Where(psql.Quote("year").EQ(psql.Arg(yearStr))))
+	}
+
+	makes, err := bob.All(c, db, q, scan.StructMapper[Make]())
+
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, makes)
+}
+
+// Not needed as of now, will need a refactor with DB changes
 func PostCars(c *gin.Context) {
 
-	db, err := database.GetDbConnection()
+	db, err := database.GetDB()
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
 	var newCar Car
 	if err := c.BindJSON(&newCar); err != nil {

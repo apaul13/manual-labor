@@ -22,9 +22,11 @@ func RunRouter() {
 
 	router.Use(cors.New(config))
 
-	router.GET("/cars", cars.GetCars)
-	router.POST("/cars", cars.PostCars)
+	// router.GET("/cars", cars.GetCars)
+	// router.POST("/cars", cars.PostCars)
 	// router.GET("/cars/lookupvin", cars.LookupVIN)
+	//
+	router.GET("/makes", cars.GetMakes)
 	router.GET("/health", Health)
 
 	router.Run(":8080")
