@@ -98,6 +98,8 @@ export default function CarSearch() {
                                     <option value="2024">2024</option>
                                     <option value="2023">2023</option>
                                     <option value="2022">2022</option>
+                                    <option value="2021">2021</option>
+                                    <option value="2020">2020</option>
                                 </select>
                             </div>
 
@@ -105,9 +107,9 @@ export default function CarSearch() {
                                 <label htmlFor="make-input" className="label-category-select">Make</label>
                                 <select id="make-input" className="input" value={make} disabled={!year} onChange={e => setMake(e.target.value)}>
                                     <option value="">Make</option>
-                                    <option value="honda">Honda</option>
-                                    <option value="toyota">Toyota</option>
-                                    <option value="ford">Ford</option>
+                                    <option value="HONDA">Honda</option>
+                                    <option value="TOYOTA">Toyota</option>
+                                    <option value="FORD">Ford</option>
                                 </select>
                             </div>
 
@@ -115,9 +117,9 @@ export default function CarSearch() {
                                 <label htmlFor="model-input" className="label-category-select">Model</label>
                                 <select id="model-input" className="input" value={model} disabled={!make} onChange={e => setModel(e.target.value)}>
                                     <option value="">Model</option>
-                                    <option value="model1">Model 1</option>
-                                    <option value="model2">Model 2</option>
-                                    <option value="model3">Model 3</option>
+                                    <option value="PRIUS">Prius</option>
+                                    <option value="CAMRY">Camry</option>
+                                    <option value="COROLLA">Corolla</option>
                                 </select>
                             </div>
 
@@ -125,9 +127,9 @@ export default function CarSearch() {
                                 <label htmlFor="trim-input" className="label-category-select">Trim</label>
                                 <select id="trim-input" className="input" value={trim} disabled={!model} onChange={e => setTrim(e.target.value)}>
                                     <option value="">Trim</option>
-                                    <option value="trim1">Trim 1</option>
-                                    <option value="trim2">Trim 2</option>
-                                    <option value="trim3">Trim 3</option>
+                                    <option value="SE">SE</option>
+                                    <option value="LE">LE</option>
+                                    <option value="XLE">XLE</option>
                                 </select>
                             </div>
                         </>
