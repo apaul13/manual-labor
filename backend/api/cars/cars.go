@@ -33,8 +33,17 @@ type Car struct {
 }
 
 type MakePaginated struct {
-	Makes []Make
-	Meta  PaginationDetails
+	Makes             []Make
+	PaginationDetails PaginationDetails
+}
+
+type Year struct {
+	Year string
+}
+
+type YearPaginated struct {
+	Years             []Year
+	PaginationDetails PaginationDetails
 }
 
 type PaginationDetails struct {
@@ -89,6 +98,7 @@ func GetCars(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, cars)
 }
 
+// Returns vehicle makes ordered by name ascending with pagination limits
 func GetMakes(c *gin.Context) {
 	err := errors.New("offset and limit are required parameters.")
 	offsetStr := c.Query("offset")
@@ -132,11 +142,50 @@ func GetMakes(c *gin.Context) {
 	}
 
 	makesPaginated := MakePaginated{
-		Makes: makes,
-		Meta:  paginationDetails,
+		Makes:             makes,
+		PaginationDetails: paginationDetails,
 	}
 
 	c.IndentedJSON(http.StatusOK, makesPaginated)
+}
+
+// Returns years in descending order with pagination limits
+func GetYears(c *gin.Context) {
+	err := errors.New("offset and limit are required parameters.")
+	offsetStr := c.Query("offset")
+	limitStr := c.Query("limit")
+	if !CheckPaginationParams(offsetStr, limitStr) {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
+	db, err := database.GetDB()
+	q := psql.Select(sm.Columns("year"),
+		sm.Distinct(),
+		sm.From("make"),
+		sm.OrderBy("year").Desc())
+
+	years, err := bob.All(c, db, q, scan.StructMapper[Year]())
+
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	offsetInt, err := strconv.Atoi(offsetStr)
+	limitInt, err := strconv.Atoi(limitStr)
+
+	paginationDetails := PaginationDetails{
+		Offset: offsetInt,
+		Limit:  limitInt,
+	}
+
+	yearPaginated := YearPaginated{
+		Years:             years,
+		PaginationDetails: paginationDetails,
+	}
+
+	c.IndentedJSON(http.StatusOK, yearPaginated)
 }
 
 // Not needed as of now, will need a refactor with DB changes

@@ -28,6 +28,7 @@ func RunRouter() {
 	// router.POST("/cars", cars.PostCars)
 	//
 	router.GET("/makes", cars.GetMakes)
+	router.GET("/years", cars.GetYears)
 	router.GET("/health", Health)
 
 	router.Run(":8080")
