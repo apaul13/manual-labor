@@ -2,9 +2,11 @@ package cars
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/apaul13/manual-labor/database"
@@ -17,17 +19,28 @@ import (
 )
 
 type Make struct {
-	ID      int64
-	Display string
-	Year    string
+	ID   int64
+	Name string
+	Year string
 }
 
 type Car struct {
-	ID    int64 // `db:",pk"`
+	ID    int64
 	Make  string
 	Model string
 	Year  string
 	Trim  string
+}
+
+type MakePaginated struct {
+	Makes []Make
+	Meta  PaginationDetails
+}
+
+type PaginationDetails struct {
+	Offset int
+	Limit  int
+	// Total  int64
 }
 
 type VINLookupCar struct {
@@ -77,6 +90,14 @@ func GetCars(c *gin.Context) {
 }
 
 func GetMakes(c *gin.Context) {
+	err := errors.New("offset and limit are required parameters.")
+	offsetStr := c.Query("offset")
+	limitStr := c.Query("limit")
+	if !CheckPaginationParams(offsetStr, limitStr) {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
 	db, err := database.GetDB()
 
 	yearStr := c.Query("year")
@@ -91,6 +112,10 @@ func GetMakes(c *gin.Context) {
 		q.Apply(sm.Where(psql.Quote("year").EQ(psql.Arg(yearStr))))
 	}
 
+	q.Apply(sm.Offset(offsetStr))
+	q.Apply(sm.Limit(limitStr))
+	q.Apply(sm.OrderBy("name").Asc())
+
 	makes, err := bob.All(c, db, q, scan.StructMapper[Make]())
 
 	if err != nil {
@@ -98,7 +123,20 @@ func GetMakes(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, makes)
+	offsetInt, err := strconv.Atoi(offsetStr)
+	limitInt, err := strconv.Atoi(limitStr)
+
+	paginationDetails := PaginationDetails{
+		Offset: offsetInt,
+		Limit:  limitInt,
+	}
+
+	makesPaginated := MakePaginated{
+		Makes: makes,
+		Meta:  paginationDetails,
+	}
+
+	c.IndentedJSON(http.StatusOK, makesPaginated)
 }
 
 // Not needed as of now, will need a refactor with DB changes
@@ -246,4 +284,12 @@ func LookupVIN(c *gin.Context) {
 	strings.ToUpper(vinLookupCar.Trim)
 
 	c.IndentedJSON(http.StatusOK, vinLookupCar)
+}
+
+func CheckPaginationParams(offset string, limit string) bool {
+	if len(offset) == 0 || len(limit) == 0 {
+		return false
+	}
+
+	return true
 }
