@@ -26,7 +26,6 @@ func RunRouter() {
 
 	// router.GET("/cars", cars.GetCars)
 	// router.POST("/cars", cars.PostCars)
-	router.GET("/cars", cars.LookupVIN)
 	//
 	router.GET("/makes", cars.GetMakes)
 	router.GET("/health", Health)

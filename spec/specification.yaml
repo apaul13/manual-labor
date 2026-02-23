@@ -32,16 +32,16 @@ paths:
             type: string
           description: Optional year filter. Returns all makes if omitted.
       responses:
-        '200':
+        "200":
           description: A list of makes
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Make'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                  $ref: "#/components/schemas/Make"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /models:
     get:
@@ -58,18 +58,18 @@ paths:
             type: integer
           description: The ID of the make.
       responses:
-        '200':
+        "200":
           description: A list of models
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Model'
-        '400':
+                  $ref: "#/components/schemas/Model"
+        "400":
           description: makeId is required
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /trims:
     get:
@@ -86,19 +86,19 @@ paths:
             type: integer
           description: The ID of the model.
       responses:
-        '200':
+        "200":
           description: A list of trims
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Trim'
-        '400':
+                  $ref: "#/components/schemas/Trim"
+        "400":
           description: modelId is required
-        '404':
-          $ref: '#/components/responses/NotFound'
-  
+        "404":
+          $ref: "#/components/responses/NotFound"
+
   /cars:
     get:
       summary: Get cars
@@ -138,12 +138,12 @@ paths:
             type: string
           description: Optional search term to match against make/model/trim names.
       responses:
-        '200':
-          $ref: '#/components/responses/PaginatedCarsResponse'
-        '400':
+        "200":
+          $ref: "#/components/responses/PaginatedCarsResponse"
+        "400":
           description: trimId is required
-        '404':
-          $ref: '#/components/responses/NotFound'
+        "404":
+          $ref: "#/components/responses/NotFound"
 
 components:
   schemas:
@@ -228,7 +228,7 @@ components:
               items:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Cars'
+                  $ref: "#/components/schemas/Cars"
               page:
                 type: integer
               pageSize:

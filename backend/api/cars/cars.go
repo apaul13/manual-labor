@@ -17,9 +17,9 @@ import (
 )
 
 type Make struct {
-	ID   int64
-	Name string
-	Year string
+	ID      int64
+	Display string
+	Year    string
 }
 
 type Car struct {
@@ -82,7 +82,7 @@ func GetMakes(c *gin.Context) {
 	yearStr := c.Query("year")
 
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 
@@ -94,7 +94,7 @@ func GetMakes(c *gin.Context) {
 	makes, err := bob.All(c, db, q, scan.StructMapper[Make]())
 
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 
@@ -228,18 +228,22 @@ func LookupVIN(c *gin.Context) {
 		}
 		// fallback by VariableId if needed:
 		if vinLookupCar.Make == "" && r.VariableId == 26 {
-			vinLookupCar.Make = strings.ToUpper(val)
+			vinLookupCar.Make = val
 		}
 		if vinLookupCar.Model == "" && r.VariableId == 28 {
-			vinLookupCar.Model = strings.ToUpper(val)
+			vinLookupCar.Model = val
 		}
 		if vinLookupCar.Year == "" && r.VariableId == 29 {
-			vinLookupCar.Year = strings.ToUpper(val)
+			vinLookupCar.Year = val
 		}
 		if vinLookupCar.Trim == "" && r.VariableId == 38 {
-			vinLookupCar.Trim = strings.ToUpper(val)
+			vinLookupCar.Trim = val
 		}
 	}
+
+	strings.ToUpper(vinLookupCar.Make)
+	strings.ToUpper(vinLookupCar.Model)
+	strings.ToUpper(vinLookupCar.Trim)
 
 	c.IndentedJSON(http.StatusOK, vinLookupCar)
 }
