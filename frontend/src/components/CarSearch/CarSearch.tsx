@@ -1,8 +1,9 @@
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { FaSearch } from "react-icons/fa";
 import { config } from '../../constants/config';
 import './CarSearch.css'
+import type { Make, Model, Trim, MakesResponse, YearsResponse, Year } from '../../types/models';
 
 export default function CarSearch() {
 
@@ -12,6 +13,11 @@ export default function CarSearch() {
     const [make, setMake] = useState('')
     const [model, setModel] = useState('')
     const [trim, setTrim] = useState('')
+
+    const [makes, setMakes] = useState<Make[]>([])
+    const [years, setYears] = useState<string[]>([])
+    const [models, setModels] = useState<Model[]>([])
+    const [trims, setTrims] = useState<Trim[]>([])
 
     const canSearch = () => {
         if (mode === 'vin')
@@ -42,6 +48,79 @@ export default function CarSearch() {
             })
             .catch(err => console.error(err))
     }
+
+    const handleSelectYear = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setYear(e.target.value);
+        setMake('');
+        setModel('');
+        setTrim('');
+
+        fetch(`${config.API_BASE_URL}/makes?year=${e.target.value}&offset=0&limit=1000`)
+            .then(response => response.json() as Promise<MakesResponse>)
+            .then(data => {
+                if (!data ||!Array.isArray(data?.Makes)) {
+                    console.error('Expected an array of makes, but got:', data);
+                    return;
+                }
+                console.log('Makes for year', e.target.value, ':', data);
+                setMakes(data.Makes);
+            })
+            .catch(err => console.error(err))
+    }
+
+    const handleSelectMake = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setMake(e.target.value);
+        setModel('');
+        setTrim('');
+
+        fetch(`${config.API_BASE_URL}/models?make=${e.target.value}&offset=0&limit=1000`)
+            .then(response => response.json())
+            .then(data => {
+                if (!Array.isArray(data)) {
+                    console.error('Expected an array of models, but got:', data);
+                    return;
+                }
+                console.log('Models for make', e.target.value, ':', data);
+                setModels(data);
+            })
+            .catch(err => console.error(err)
+            )
+    }
+
+    const handleSelectModel = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setModel(e.target.value);
+        setTrim('');
+
+        fetch(`${config.API_BASE_URL}/trims?make=${make}&model=${e.target.value}&offset=0&limit=1000`)
+            .then(response => response.json())
+            .then(data => {
+                if (!Array.isArray(data)) {
+                    console.error('Expected an array of trims, but got:', data);
+                    return;
+                }
+                console.log('Trims for make', make, 'model', e.target.value, ':', data);
+                setTrims(data);
+            })
+            .catch(err => console.error(err)
+            )
+    }
+
+    useEffect(() => {
+        fetch(`${config.API_BASE_URL}/years?offset=0&limit=1000`)
+            .then(response => response.json() as Promise<YearsResponse>)
+            .then(data => {
+                if (!data || !Array.isArray(data?.Years)) {
+                    console.error('Expected an array of makes, but got:', data);
+                    return;
+                }
+                setYears(Array.from(new Set(data.Years.map((y: Year) => y.Year))).sort((a, b) => parseInt(b) - parseInt(a)));
+            })
+            .catch(err => console.error(err)
+            )
+    }, [])
+
+    console.log('Current state:', { mode, vin, year, make, model, trim, makes, years });
+
     return (
         <section className="car-search">
             <form className="vehicle-identification" onSubmit={(e) => { e.preventDefault(); handleSearch(); }}>
@@ -93,33 +172,31 @@ export default function CarSearch() {
                         <>
                             <div className="field">
                                 <label htmlFor="year-input" className="label-category-select">Year</label>
-                                <select id="year-input" className="input" value={year} onChange={e => setYear(e.target.value)}>
+                                <select id="year-input" className="input" value={year} onChange={handleSelectYear}>
                                     <option value="">Year</option>
-                                    <option value="2024">2024</option>
-                                    <option value="2023">2023</option>
-                                    <option value="2022">2022</option>
-                                    <option value="2021">2021</option>
-                                    <option value="2020">2020</option>
+                                    {years && years.map(y => (
+                                        <option key={y} value={y}>{y}</option>
+                                    ))}
                                 </select>
                             </div>
 
                             <div className="field">
                                 <label htmlFor="make-input" className="label-category-select">Make</label>
-                                <select id="make-input" className="input" value={make} disabled={!year} onChange={e => setMake(e.target.value)}>
+                                <select id="make-input" className="input" value={make} disabled={!year} onChange={handleSelectMake}>
                                     <option value="">Make</option>
-                                    <option value="HONDA">Honda</option>
-                                    <option value="TOYOTA">Toyota</option>
-                                    <option value="FORD">Ford</option>
+                                    {makes && makes.map(m => (
+                                        <option key={m.ID} value={m.ID}>{m.Name}</option>
+                                    ))}
                                 </select>
                             </div>
 
                             <div className="field">
                                 <label htmlFor="model-input" className="label-category-select">Model</label>
-                                <select id="model-input" className="input" value={model} disabled={!make} onChange={e => setModel(e.target.value)}>
+                                <select id="model-input" className="input" value={model} disabled={!make} onChange={handleSelectModel}>
                                     <option value="">Model</option>
-                                    <option value="PRIUS">Prius</option>
-                                    <option value="CAMRY">Camry</option>
-                                    <option value="COROLLA">Corolla</option>
+                                    {models && models.map(m => (
+                                        <option key={m.ID} value={m.ID}>{m.Name}</option>
+                                    ))}
                                 </select>
                             </div>
 
@@ -127,9 +204,9 @@ export default function CarSearch() {
                                 <label htmlFor="trim-input" className="label-category-select">Trim</label>
                                 <select id="trim-input" className="input" value={trim} disabled={!model} onChange={e => setTrim(e.target.value)}>
                                     <option value="">Trim</option>
-                                    <option value="SE">SE</option>
-                                    <option value="LE">LE</option>
-                                    <option value="XLE">XLE</option>
+                                    {trims && trims.map(t => (
+                                        <option key={t.ID} value={t.ID}>{t.Name}</option>
+                                    ))}
                                 </select>
                             </div>
                         </>

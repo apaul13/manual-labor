@@ -108,10 +108,6 @@
     box-shadow: 0 8px 20px rgba(46, 91, 255, 0.18);
 }
 
-.search-button:hover {
-    transform: translateY(-1px);
-}
-
 @media (max-width: 900px) {
     .search-options {
         grid-template-columns: 1fr;
