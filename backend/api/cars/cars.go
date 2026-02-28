@@ -19,9 +19,25 @@ import (
 )
 
 type Make struct {
-	ID   int64
-	Name string
-	Year string
+	ID   int64  `db:"id"`
+	Name string `db:"name"`
+	Year string `db:"year"`
+}
+
+type MakePaginated struct {
+	Makes             []Make
+	PaginationDetails PaginationDetails
+}
+
+type Model struct {
+	ID     int64  `db:"id"`
+	Name   string `db:"name"`
+	MakeID int64  `db:"make_id"`
+}
+
+type ModelPaginated struct {
+	Models            []Model
+	PaginationDetails PaginationDetails
 }
 
 type Car struct {
@@ -32,24 +48,24 @@ type Car struct {
 	Trim  string
 }
 
-type MakePaginated struct {
-	Makes             []Make
-	PaginationDetails PaginationDetails
-}
-
 type Year struct {
 	Year string
 }
 
-type YearPaginated struct {
-	Years             []Year
-	PaginationDetails PaginationDetails
+// type YearPaginated struct {
+// 	Years             []Year
+// 	PaginationDetails PaginationDetails
+// }
+
+// TotalCount is used to scan a COUNT(*) result from the database.
+type TotalCount struct {
+	Total int64 `db:"total"`
 }
 
 type PaginationDetails struct {
 	Offset int
 	Limit  int
-	// Total  int64
+	Total  int64
 }
 
 type VINLookupCar struct {
@@ -89,10 +105,13 @@ func GetCars(c *gin.Context) {
 	}
 
 	cars, err := bob.All(c, db, q, scan.StructMapper[Car]())
-
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
+	}
+
+	if cars == nil {
+		cars = []Car{}
 	}
 
 	c.IndentedJSON(http.StatusOK, cars)
@@ -117,20 +136,42 @@ func GetMakes(c *gin.Context) {
 		return
 	}
 
+	// Base query used for retrieving paginated makes
 	q := psql.Select(sm.From("make"))
 	if len(yearStr) > 0 {
 		q.Apply(sm.Where(psql.Quote("year").EQ(psql.Arg(yearStr))))
 	}
 
+	// Build a total count query (same filters but without limit/offset)
+	totalQuery := psql.Select(sm.Columns("COUNT(*) AS total"), sm.From("make"))
+	if len(yearStr) > 0 {
+		totalQuery.Apply(sm.Where(psql.Quote("year").EQ(psql.Arg(yearStr))))
+	}
+
+	var totalRows []TotalCount
+	totalRows, err = bob.All(c, db, totalQuery, scan.StructMapper[TotalCount]())
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	var total int64
+	if len(totalRows) > 0 {
+		total = totalRows[0].Total
+	}
+
+	// Apply pagination and ordering to the list query
 	q.Apply(sm.Offset(offsetStr))
 	q.Apply(sm.Limit(limitStr))
 	q.Apply(sm.OrderBy("name").Asc())
 
 	makes, err := bob.All(c, db, q, scan.StructMapper[Make]())
-
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
+	}
+
+	if makes == nil {
+		makes = []Make{}
 	}
 
 	offsetInt, err := strconv.Atoi(offsetStr)
@@ -139,6 +180,7 @@ func GetMakes(c *gin.Context) {
 	paginationDetails := PaginationDetails{
 		Offset: offsetInt,
 		Limit:  limitInt,
+		Total:  total,
 	}
 
 	makesPaginated := MakePaginated{
@@ -151,13 +193,13 @@ func GetMakes(c *gin.Context) {
 
 // Returns years in descending order with pagination limits
 func GetYears(c *gin.Context) {
-	err := errors.New("offset and limit are required parameters.")
-	offsetStr := c.Query("offset")
-	limitStr := c.Query("limit")
-	if !CheckPaginationParams(offsetStr, limitStr) {
-		c.AbortWithError(http.StatusBadRequest, err)
-		return
-	}
+	// err := errors.New("offset and limit are required parameters.")
+	// offsetStr := c.Query("offset")
+	// limitStr := c.Query("limit")
+	// if !CheckPaginationParams(offsetStr, limitStr) {
+	// 	c.AbortWithError(http.StatusBadRequest, err)
+	// 	return
+	// }
 
 	db, err := database.GetDB()
 	q := psql.Select(sm.Columns("year"),
@@ -172,20 +214,88 @@ func GetYears(c *gin.Context) {
 		return
 	}
 
+	c.IndentedJSON(http.StatusOK, years)
+}
+
+func GetModels(c *gin.Context) {
+	err := errors.New("offset and limit are required parameters.")
+	offsetStr := c.Query("offset")
+	limitStr := c.Query("limit")
+	if !CheckPaginationParams(offsetStr, limitStr) {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
+	makeIdStr := c.Query("make")
+
+	fmt.Print(makeIdStr)
+	db, err := database.GetDB()
+	q := psql.Select(
+		sm.From("model"))
+
+	if len(makeIdStr) > 0 {
+		q.Apply(sm.Where(psql.Quote("make_id").EQ(psql.Arg(makeIdStr))))
+	}
+
+	// Apply ordering and pagination before executing the query
+	q.Apply(sm.OrderBy("name").Desc())
+	q.Apply(sm.Offset(offsetStr))
+	q.Apply(sm.Limit(limitStr))
+
+	var buf strings.Builder
+	_, error := q.WriteSQL(c, &buf, q.Dialect, 1)
+	if error != nil {
+		// log.Fatal(err)
+	}
+	fmt.Println("SQL:", buf.String())
+
+	models, err := bob.All(c, db, q, scan.StructMapper[Model]())
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Normalize nil slice to an empty slice so JSON encodes [] instead of null
+	if models == nil {
+		models = []Model{}
+	}
+
+	totalQuery := psql.Select(sm.Columns("COUNT(*) AS total"), sm.From("model"))
+	if len(makeIdStr) > 0 {
+		totalQuery.Apply(sm.Where(psql.Quote("make_id").EQ(psql.Arg(makeIdStr))))
+	}
+
+	var totalRows []TotalCount
+	totalRows, err = bob.All(c, db, totalQuery, scan.StructMapper[TotalCount]())
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	var total int64
+	if len(totalRows) > 0 {
+		total = totalRows[0].Total
+	}
+
+	// if err != nil {
+	// 	c.AbortWithError(http.StatusInternalServerError, err)
+	// 	return
+	// }
+
 	offsetInt, err := strconv.Atoi(offsetStr)
 	limitInt, err := strconv.Atoi(limitStr)
 
 	paginationDetails := PaginationDetails{
 		Offset: offsetInt,
 		Limit:  limitInt,
+		Total:  total,
 	}
 
-	yearPaginated := YearPaginated{
-		Years:             years,
+	modelsPaginated := ModelPaginated{
+		Models:            models,
 		PaginationDetails: paginationDetails,
 	}
 
-	c.IndentedJSON(http.StatusOK, yearPaginated)
+	c.IndentedJSON(http.StatusOK, modelsPaginated)
 }
 
 // Not needed as of now, will need a refactor with DB changes

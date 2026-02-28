@@ -23,12 +23,14 @@ func RunRouter() {
 
 	router.Use(cors.New(config))
 	router.Use(middleware.ErrorHandler())
+	router.SetTrustedProxies(nil)
 
 	// router.GET("/cars", cars.GetCars)
 	// router.POST("/cars", cars.PostCars)
 	//
 	router.GET("/makes", cars.GetMakes)
 	router.GET("/years", cars.GetYears)
+	router.GET("/models", cars.GetModels)
 	router.GET("/health", Health)
 
 	router.Run(":8080")
