@@ -361,17 +361,17 @@ INSERT INTO model (name, make_id) VALUES
     ('RAV4', (select id from make where name = 'TOYOTA' and year = '2026'));
 
 -- Manuals (URLs unchanged)
-INSERT INTO manual (id, url) VALUES
-  (1, 'https://example.com/manuals/camry-le.pdf'),
-  (2, 'https://example.com/manuals/camry-xle.pdf'),
-  (3, 'https://example.com/manuals/corolla-se.pdf'),
-  (4, 'https://example.com/manuals/corolla-xse.pdf'),
-  (5, 'https://example.com/manuals/civic-lx.pdf'),
-  (6, 'https://example.com/manuals/civic-ex.pdf'),
-  (7, 'https://example.com/manuals/accord-sport.pdf'),
-  (8, 'https://example.com/manuals/accord-touring.pdf'),
-  (9, 'https://example.com/manuals/f150-xl.pdf'),
-  (10,'https://example.com/manuals/f150-xlt.pdf');
+INSERT INTO manual (url) VALUES
+  ('https://techinfo.honda.com/rjanisis/pubs/OM/AH/A30A2626OMEN/enu/A30A2626OMEN.PDF'),
+  ('https://techinfo.honda.com/rjanisis/pubs/OM/AH/A30A2525OM/enu/A30A2525OMEN.PDF'),
+  ('https://techinfo.honda.com/rjanisis/pubs/OM/AH/A30A2424OM/enu/A30A2424OMEN.PDF'),
+  ('https://techinfo.honda.com/rjanisis/pubs/OM/AH/A30A2323OMEN/enu/A30A2323OMEN.PDF'),
+  ('https://techinfo.honda.com/rjanisis/pubs/OM/AH/ATVA2222OM/enu/ATVA2222OM.PDF'),
+  ('https://techinfo.honda.com/rjanisis/pubs/OM/AH/ATVA2121OM/enu/ATVA2121OM.PDF'),
+  ('https://techinfo.honda.com/rjanisis/pubs/OM/AH/ATVA2020OM/enu/ATVA2020OM.PDF'),
+  ('https://techinfo.honda.com/rjanisis/pubs/OM/AH/ATVA1919OM/enu/ATVA1919OM.PDF'),
+  ('https://techinfo.honda.com/rjanisis/pubs/OM/AH/ATVA1818OM/enu/ATVA1818OM.PDF'),
+  ('https://techinfo.honda.com/rjanisis/pubs/OM/AH/ATVA1717OM/enu/ATVA1717OM.PDF');
 
 -- Trims (UPPERCASE)
 INSERT INTO trim (id, name, model_id, manual_id) VALUES

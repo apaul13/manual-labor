@@ -1,11 +1,12 @@
 package api
 
 import (
-	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/apaul13/manual-labor/api/cars"
 	"github.com/apaul13/manual-labor/api/middleware"
+	"github.com/apaul13/manual-labor/database"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -37,5 +38,18 @@ func RunRouter() {
 }
 
 func Health(c *gin.Context) {
-	fmt.Println("YAYYYY!")
+	db, err := database.GetDB()
+
+	if err != nil {
+		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"error": err.Error()})
+	}
+
+	ping := db.Ping()
+
+	if ping != nil {
+		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"status": "unhealthy"})
+	} else {
+		c.IndentedJSON(http.StatusOK, gin.H{"status": "healthy"})
+	}
+
 }
