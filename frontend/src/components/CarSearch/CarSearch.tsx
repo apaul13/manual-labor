@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { FaSearch } from "react-icons/fa";
 import { config } from '../../constants/config';
 import './CarSearch.css'
-import type { Make, Model, Trim, MakesResponse, YearsResponse, Year } from '../../types/models';
+import type { Make, Model, Trim, MakesResponse, YearsResponse, Year, ModelsResponse } from '../../types/models';
 
 export default function CarSearch() {
 
@@ -74,14 +74,14 @@ export default function CarSearch() {
         setTrim('');
 
         fetch(`${config.API_BASE_URL}/models?make=${e.target.value}&offset=0&limit=1000`)
-            .then(response => response.json())
+            .then(response => response.json() as Promise<ModelsResponse>)
             .then(data => {
-                if (!Array.isArray(data)) {
+                if (!Array.isArray(data.Models)) {
                     console.error('Expected an array of models, but got:', data);
                     return;
                 }
                 console.log('Models for make', e.target.value, ':', data);
-                setModels(data);
+                setModels(data.Models);
             })
             .catch(err => console.error(err)
             )
