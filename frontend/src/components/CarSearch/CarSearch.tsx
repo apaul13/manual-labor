@@ -106,14 +106,14 @@ export default function CarSearch() {
     }
 
     useEffect(() => {
-        fetch(`${config.API_BASE_URL}/years?offset=0&limit=1000`)
-            .then(response => response.json() as Promise<YearsResponse>)
-            .then(data => {
-                if (!data || !Array.isArray(data?.Years)) {
-                    console.error('Expected an array of makes, but got:', data);
+        fetch(`${config.API_BASE_URL}/years`)
+          .then((response) => response.json() as Promise<YearsResponse>)
+          .then((data) => {
+            if (!data || !Array.isArray(data)) {
+              console.error("Expected an array of years, but got:", data);
                     return;
                 }
-                setYears(Array.from(new Set(data.Years.map((y: Year) => y.Year))).sort((a, b) => parseInt(b) - parseInt(a)));
+                setYears(Array.from(new Set(data.map((y: Year) => y.Year))).sort((a, b) => parseInt(b) - parseInt(a)));
             })
             .catch(err => console.error(err)
             )

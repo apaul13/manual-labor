@@ -6,7 +6,7 @@ export interface PaginationDetails {
 
 export interface YearsResponse {
     Years: Year[];
-    PaginationDetails: PaginationDetails;
+    // PaginationDetails: PaginationDetails;
 }
 
 export interface MakesResponse {
